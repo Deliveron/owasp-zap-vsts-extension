@@ -33,7 +33,7 @@ namespace owasp_zap_vsts_tool
 
                 if (args[0].ToLower() == "attachreport")
                 {
-                    if (args.Length < 6)
+                    if (args.Length < 3)
                     {
                         System.Console.WriteLine("Please enter the following arguments for CreateBug using format argument=value");
                         System.Console.WriteLine("    collectionUri=\"http://tfs2015:8080/tfs/DefaultCollection\"   (Url to Tfs including collection)");
