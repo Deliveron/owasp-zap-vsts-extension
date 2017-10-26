@@ -14,12 +14,18 @@ using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
 using System.Xml;
 using System.Xml.Linq;
 using Microsoft.TeamFoundation.Core.WebApi.Types;
+using System.Threading.Tasks;
 
 namespace owasp_zap_vsts_tool
 {
     class Program
     {
         static void Main(string[] args)
+        {
+            MainAsync(args).GetAwaiter().GetResult();
+        }
+
+        static async Task MainAsync(string[] args)
         {
             try
             {
@@ -53,7 +59,7 @@ namespace owasp_zap_vsts_tool
                         personalAccessToken = args[6].Split('=')[1];
                     }
 
-                    AttachReportToBuildTestRun(collectionUri, teamProjectName, releaseUri, releaseEnvironmentUri, reportFile, personalAccessToken);
+                    await AttachReportToBuildTestRunAsync(collectionUri, teamProjectName, releaseUri, releaseEnvironmentUri, reportFile, personalAccessToken);
                 }
 
                 if (args[0].ToLower() == "createbugfrompentest")
@@ -89,7 +95,7 @@ namespace owasp_zap_vsts_tool
                         personalAccessToken = args[8].Split('=')[1];
                     }
 
-                    CreateBugFromPenTest(collectionUri, teamProjectName, team, releaseUri, releaseEnvironmentUri, filePath, failOnHigh, personalAccessToken);
+                    await CreateBugFromPenTestAsync(collectionUri, teamProjectName, team, releaseUri, releaseEnvironmentUri, filePath, failOnHigh, personalAccessToken);
                 }
             }
             catch(Exception ex)
@@ -100,7 +106,7 @@ namespace owasp_zap_vsts_tool
             }
         }
 
-        private static async void CreateBugFromPenTest(string collectionUri, string teamProjectName, string team, string releaseUri, string releaseEnvironmentUri, string filePath, bool failOnHigh, string personalAccessToken)
+        private static async Task CreateBugFromPenTestAsync(string collectionUri, string teamProjectName, string team, string releaseUri, string releaseEnvironmentUri, string filePath, bool failOnHigh, string personalAccessToken)
         {
             var connection = GetConnection(collectionUri, personalAccessToken);
 
@@ -165,7 +171,7 @@ namespace owasp_zap_vsts_tool
                     }
                     title = issue.IssueDescription;
 
-                    CreateBug(collectionUri, teamProjectName, team, title, areaPath, iterationPath, personalAccessToken);
+                    await CreateBugAsync(collectionUri, teamProjectName, team, title, areaPath, iterationPath, personalAccessToken);
 
                     results.Add(new TestResultCreateModel
                     {
@@ -190,7 +196,7 @@ namespace owasp_zap_vsts_tool
             }
         }
 
-        private static async void CreateBug(string collectionUri, string teamProjectName, string team, string title, string areaPath, string iterationPath, string personalAccessToken)
+        private static async Task CreateBugAsync(string collectionUri, string teamProjectName, string team, string title, string areaPath, string iterationPath, string personalAccessToken)
         {
             var connection = GetConnection(collectionUri, personalAccessToken);
 
@@ -318,7 +324,7 @@ namespace owasp_zap_vsts_tool
 
             return connection;
         }
-        private static async void AttachReportToBuildTestRun(string collectionUri, string teamProjectName, string releaseUri, string releaseEnvironmentUri, string reportFile, string personalAccessToken)
+        private static async Task AttachReportToBuildTestRunAsync(string collectionUri, string teamProjectName, string releaseUri, string releaseEnvironmentUri, string reportFile, string personalAccessToken)
         {
             var connection = GetConnection(collectionUri, personalAccessToken);
 
@@ -349,7 +355,7 @@ namespace owasp_zap_vsts_tool
 
             var attachmentModel = new TestAttachmentRequestModel(stream: Base64Encode(stream), fileName: "OwaspZapTestResultsReport.html");
             var testAttachmentResult = await testManagementClient.CreateTestRunAttachmentAsync(attachmentModel, teamProjectName, testRun.Id);
-        }
+}
 
         private static string Base64Encode(string plainText)
         {
