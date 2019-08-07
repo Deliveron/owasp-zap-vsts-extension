@@ -300,12 +300,12 @@ namespace owasp_zap_vsts_tool.Services
                             Solution = e.Element("solution").Value,
                             Instances = (from i in e.Descendants("instance")
                                          select new IssueInstance
-                                            {
-                                                Uri = i.Element("uri").Value,
-                                                Evidence = i.Element("evidence").Value
+                                         {
+                                             Uri = i.Element("uri").Value,
+                                             Evidence = i.Element("evidence") != null ? i.Element("evidence").Value : ""
                                             }).ToList()
 
-                        }); ;
+                        }) ;; ;
                            
                 }
                 return new Report { Issues = issues };
