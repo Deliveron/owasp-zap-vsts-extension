@@ -88,7 +88,8 @@ namespace owasp_zap_vsts_tool.Services
                 Console.WriteLine("Issues(" + report.Issues.Count() + " found.");
                 foreach (Issue issue in report.Issues)
                 {
-                    if (issue.RiskDescription.Contains("Information"))
+                    severity = issue.RiskDescription.Split(' ')[0];
+                    if (severity.Contains("Information"))
                     {
                         continue;
                     }
@@ -187,7 +188,7 @@ namespace owasp_zap_vsts_tool.Services
 
             var results = await witClient.QueryByWiqlAsync(wiql);
 
-            int severityValue = severity == "High" ? 2 : severity == "Low" ? 1 : 3;
+            string severityValue = severity == "High" ? "2 - High" : severity == "Low" ? "4 - Low" : "3 - Medium";
 
             if (results.WorkItems.Count() == 0)
             {
@@ -204,14 +205,14 @@ namespace owasp_zap_vsts_tool.Services
                 doc.Add(
                     new JsonPatchOperation()
                     {
-                        Path = "/fields/System.ReproSteps",
+                        Path = "/fields/Microsoft.VSTS.TCM.ReproSteps",
                         Operation = Microsoft.VisualStudio.Services.WebApi.Patch.Operation.Add,
                         Value = description + " " + solution
                     });
                 doc.Add(
                 new JsonPatchOperation()
                 {
-                    Path = "/fields/System.Severity",
+                    Path = "/fields/Microsoft.VSTS.Common.Severity",
                     Operation = Microsoft.VisualStudio.Services.WebApi.Patch.Operation.Add,
                     Value = severityValue
                 });
