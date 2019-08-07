@@ -73,6 +73,10 @@ namespace owasp_zap_vsts_tool.Services
             
             var report = GetReport(filePath, targetUrl);
             string title = String.Empty;
+                string description = String.Empty;
+                string solution = String.Empty;
+                string severity = string.Empty;
+                
 
             bool testsPassed = true;
             bool highFailure = false;
@@ -84,7 +88,8 @@ namespace owasp_zap_vsts_tool.Services
                 Console.WriteLine("Issues(" + report.Issues.Count() + " found.");
                 foreach (Issue issue in report.Issues)
                 {
-                    if (issue.RiskDescription.Contains("Information"))
+                    severity = issue.RiskDescription.Split(' ')[0];
+                    if (severity.Contains("Information"))
                     {
                         continue;
                     }
@@ -95,8 +100,9 @@ namespace owasp_zap_vsts_tool.Services
                         highFailure = true;
                     }
                     title = issue.IssueDescription;
-
-                    await CreateBugAsync(collectionUri, teamProjectName, team, bugTitlePrefix + " " + title, areaPath, iterationPath, personalAccessToken);
+                        description = issue.Description;
+                        solution = issue.Solution;
+                    await CreateBugAsync(collectionUri, teamProjectName, team, targetUrl, severity, bugTitlePrefix + " " + title, description, solution, areaPath, iterationPath, personalAccessToken);
 
                     results.Add(new TestCaseResult
                     {
@@ -169,7 +175,7 @@ namespace owasp_zap_vsts_tool.Services
             return System.Convert.ToBase64String(plainTextBytes);
         }
 
-        private static async Task CreateBugAsync(string collectionUri, string teamProjectName, string team, string title, string areaPath, string iterationPath, string personalAccessToken)
+        private static async Task CreateBugAsync(string collectionUri, string teamProjectName, string team, string url, string severity, string title, string description, string solution, string areaPath, string iterationPath, string personalAccessToken)
         {
             var connection = GetConnection(collectionUri, personalAccessToken);
 
@@ -182,6 +188,8 @@ namespace owasp_zap_vsts_tool.Services
 
             var results = await witClient.QueryByWiqlAsync(wiql);
 
+            string severityValue = severity == "High" ? "2 - High" : severity == "Low" ? "4 - Low" : "3 - Medium";
+
             if (results.WorkItems.Count() == 0)
             {
                 // create new bug
@@ -192,8 +200,22 @@ namespace owasp_zap_vsts_tool.Services
                     {
                         Path = "/fields/System.Title",
                         Operation = Microsoft.VisualStudio.Services.WebApi.Patch.Operation.Add,
-                        Value = title
+                        Value = severity + " - " + title + " in " + url
                     });
+                doc.Add(
+                    new JsonPatchOperation()
+                    {
+                        Path = "/fields/Microsoft.VSTS.TCM.ReproSteps",
+                        Operation = Microsoft.VisualStudio.Services.WebApi.Patch.Operation.Add,
+                        Value = description + " " + solution
+                    });
+                doc.Add(
+                new JsonPatchOperation()
+                {
+                    Path = "/fields/Microsoft.VSTS.Common.Severity",
+                    Operation = Microsoft.VisualStudio.Services.WebApi.Patch.Operation.Add,
+                    Value = severityValue
+                });
                 doc.Add(
                     new JsonPatchOperation()
                     {
@@ -273,13 +295,24 @@ namespace owasp_zap_vsts_tool.Services
                         {
                             IssueDescription = e.Element("alert").Value,
                             RiskDescription = e.Element("riskdesc").Value,
-                            OriginalSiteUrl = element.Attribute("name").Value
-                        });
+                            OriginalSiteUrl = element.Attribute("name").Value,
+                            Description = e.Element("desc").Value,
+                            Solution = e.Element("solution").Value,
+                            Instances = (from i in e.Descendants("instance")
+                                         select new IssueInstance
+                                         {
+                                             Uri = i.Element("uri").Value,
+                                             Evidence = i.Element("evidence") != null ? i.Element("evidence").Value : ""
+                                            }).ToList()
+
+                        }) ;; ;
+                           
                 }
                 return new Report { Issues = issues };
             }
             return null;
         }
+
 
         private static VssConnection GetConnection(string collectionUri, string personalAccessToken)
         {

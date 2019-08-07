@@ -12,5 +12,16 @@ namespace owasp_zap_vsts_tool.Models
         internal string RiskDescription { get; set; }
         internal string OriginalSiteUrl { get; set; }
         internal string TargetUrl { get; set; }
+        internal string Description { get; set; }
+        internal string Solution { get; set; }
+        internal List<IssueInstance> Instances { get; set; }
+
+
+    }
+
+    internal class IssueInstance
+    {
+        internal string Uri { get; set; }
+        internal string Evidence { get; set; }
     }
 }
