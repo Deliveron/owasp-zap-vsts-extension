@@ -4,7 +4,7 @@ Tools to run OWASP ZAP container in VSTS build and release
 ## Install (full configuration instructions are coming soon)
 Create Azure Container Service using Docker Swarm
 
-Create CI build to compile owasp=zap-vsts-tool and include Invoke-OwaspZapActiveScan.ps1 in artifact
+Create CI build to compile owasp-zap-vsts-tool and include Invoke-OwaspZapActiveScan.ps1 in artifact
 
 Create Release with CI build as artifact. Include powershell task to call Invoke-OwaspZapActiveScan.ps1.  There are no parameters but you need to pass the the values through parameters.  Each custom environment variable belows needs to be created as variables (without the $env:)
 
