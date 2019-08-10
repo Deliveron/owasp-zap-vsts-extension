@@ -182,9 +182,12 @@ namespace owasp_zap_vsts_tool.Services
             var witClient = connection.GetClient<WorkItemTrackingHttpClient>();
             var workClient = connection.GetClient<WorkHttpClient>();
 
+            string fullTitle = severity + " - " + title + " in " + url;
+
+
             // Check to see if bug exists for team and is current open
             var wiql = new Wiql();
-            wiql.Query = "SELECT [System.Title] FROM WorkItems WHERE [System.TeamProject] = '" + teamProjectName + "' AND [System.WorkItemType] = 'Bug' AND [System.Title] CONTAINS '" + title + "' AND [System.State] <> 'Closed' AND [System.State] <> 'Removed' AND [System.AreaPath] UNDER '" + areaPath + "' AND [System.IterationPath] UNDER '" + iterationPath + "'";
+            wiql.Query = "SELECT [System.Title] FROM WorkItems WHERE [System.TeamProject] = '" + teamProjectName + "' AND [System.WorkItemType] = 'Bug' AND [System.Title] CONTAINS '" + fullTitle + "' AND [System.State] <> 'Closed' AND [System.State] <> 'Removed' AND [System.AreaPath] UNDER '" + areaPath + "' AND [System.IterationPath] UNDER '" + iterationPath + "'";
 
             var results = await witClient.QueryByWiqlAsync(wiql);
 
@@ -200,7 +203,7 @@ namespace owasp_zap_vsts_tool.Services
                     {
                         Path = "/fields/System.Title",
                         Operation = Microsoft.VisualStudio.Services.WebApi.Patch.Operation.Add,
-                        Value = severity + " - " + title + " in " + url
+                        Value = fullTitle
                     });
                 doc.Add(
                     new JsonPatchOperation()
